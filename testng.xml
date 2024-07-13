@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="TestSuite">
+    <test name="TestProject">
+        <classes>
+            <class name="ge.tbcitacademy.tests.uielementstests.UIElementsTests"/>
+            <class name="ge.tbcitacademy.tests.functionaltests.BookingTest"/>
+            <class name="ge.tbcitacademy.tests.functionaltests.AuthorizationTests"/>
+            <class name="ge.tbcitacademy.tests.functionaltests.LocalizationTests"/>
+            <class name="ge.tbcitacademy.tests.functionaltests.FilterTests"/>
+            <class name="ge.tbcitacademy.tests.security.SecurityTests"/>
+        </classes>
+    </test>
+</suite>

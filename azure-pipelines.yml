@@ -1,0 +1,77 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    exclude:
+      - '*'
+
+pr:
+  branches:
+    include:
+      - '*'
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+  - job: execute_tests
+    displayName: "Run Test Automation"
+    steps:
+      - script: |
+          sudo apt-get update && sudo apt-get install -y google-chrome-stable
+          sudo apt-get update && sudo apt-get install -y openjdk-17-jre openjdk-17-jdk maven
+          sudo apt-get update && sudo apt-get install -y maven
+          wget https://github.com/allure-framework/allure2/releases/download/2.28.0/allure-2.28.0.tgz
+          sudo tar -zxvf allure-2.28.0.tgz -C /opt/
+          sudo ln -s /opt/allure-2.28.0/bin/allure /usr/bin/allure
+          rm -rf allure-2.28.0.tgz
+        displayName: "Prepare Environment"
+
+      - task: Maven@4
+        displayName: "Running Tests"
+        inputs:
+          mavenPomFile: 'pom.xml'
+          goals: 'test'
+          options: '-Dsurefire.suiteXmlFiles=$(System.DefaultWorkingDirectory)/testng.xml'
+          publishJUnitResults: true
+          testResultsFiles: '**/surefire-reports/TEST-*.xml'
+          javaHomeOption: 'JDKVersion'
+          jdkVersionOption: 1.17
+          mavenVersionOption: 'Default'
+          mavenAuthenticateFeed: false
+          effectivePomSkip: false
+          sonarQubeRunAnalysis: false
+        continueOnError: true
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'specific'
+          project: 'e452c42c-77b8-40b1-af62-477ea0217739'
+          definition: '6'
+          buildVersionToDownload: 'latest'
+          allowPartiallySucceededBuilds: true
+          artifactName: 'allure-report'
+          targetPath: '$(System.DefaultWorkingDirectory)/public'
+        continueOnError: true
+
+      - script: |
+          chmod +x check_allure_history.sh
+          ./check_allure_history.sh
+          allure generate -c allure-results -o allure-report
+        displayName: "Generate Report"
+
+      - task: PublishPipelineArtifact@1
+        displayName: "Publish Artifact"
+        inputs:
+          targetPath: 'allure-report'
+          artifact: 'allure-report'
+          publishLocation: 'pipeline'
+
+      - task: PublishAllureReport@1
+        displayName: "Publish Allure Report"
+        inputs:
+          allureVersion: '2.28.0'
+          testResultsDir: 'allure-results'
